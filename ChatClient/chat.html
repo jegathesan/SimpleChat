@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/toastr.min.css">
+    <link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+<div class="row">
+    <div class="col-md-4 col-md-offset-3">
+        <header>
+            <h1>Chats <span data-bind="text: userName"></span></h1>
+        </header>
+        <section class="messages" data-bind="visible: isShowChatWindow">
+            <div data-bind="foreach: messages">
+                <div class="message" data-bind="visible: type == 'mySelf'">
+                    <div class="iconRed">ME</div>
+                    <div style="margin-left: 10px; float: left">
+                        <h2 data-bind="text: senderName"></h2>
+                        <p data-bind="text: message"></p>
+                        <p class="time"><span class="entypo-clock"></span> 5 mins ago</p>
+                    </div>
+                </div>
+                <div class="message" data-bind="visible: type == 'partner'">
+                    <div class="iconBlue">U</div>
+                    <div style="text-align: right; margin-right: 70px">
+                        <h2 data-bind="text: senderName">The Murray</h2>
+                        <p data-bind="text: message"></p>
+                        <p class="time" style="float: right"><span class="entypo-clock"></span> 3 mins ago</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="new" data-bind="visible: isShowChatWindow">
+            <div class="input-group">
+                <input data-bind="value: message" type="text" class="form-control" placeholder="Enter message">
+                <span data-bind="click: sendMessage" class="input-group-addon info">Send</span>
+            </div>
+        </div>
+        <div class="new" data-bind="visible: !isShowChatWindow()" >
+            <div class="input-group">
+                <input data-bind="value: userName" type="text" class="form-control" placeholder="Enter Nick Name">
+                <span data-bind="click: registerUser" class="input-group-addon info">Start</span>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-md-2" data-bind="visible:isShowChatWindow">
+        <header>
+            <h1>Online Users</h1>
+        </header>
+        <div id="onlineUsers" data-bind="foreach: onlineUsers">
+            <div class="users" data-bind="visible:$parent.userName()!= $parent.onlineUsers()[$index()],
+            text:$parent.onlineUsers()[$index()],
+            click: $parent.choosePartner,
+            attr:{id:$parent.onlineUsers()[$index()]}">Jegan</div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script src="js/socket.io.js"></script>
+<script src="js/jquery.js"></script>
+<script src="js/Knockout 3.1.0.js"></script>
+<script src="js/toastr.min.js"></script>
+<script src="chat.js"></script>
+<script>
+    $(document).ready(function(){
+        chatObj = new chat();
+        chatObj.init();
+        ko.applyBindings(chatObj);
+
+        socket.on('registerResponse', function(data){
+            if(data.status == 'success'){
+                chatObj.onlineUsers(data.users);
+            }
+            else{
+                toastr.warning(data.message);
+            }
+        });
+
+        socket.on('receiveMessage', function(data){
+            $('#' + data.senderName).trigger('click');
+            chatObj.messages.push(data);
+            $('.messages').scrollTop($('.messages').prop('scrollHeight'));
+        });
+
+        socket.on('sendErrorResponse', function(data){
+            toastr.warning(data);
+        });
+
+    });
+
+    toastr.options = {
+        "closeButton": false,
+        "debug": false,
+        "progressBar": false,
+        "positionClass": "toast-top-right",
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+
+    $(document).on('click','.users',function(){
+        $('.users').removeClass('active');
+        $(this).addClass('active');
+    })
+
+
+</script>
+</html>
