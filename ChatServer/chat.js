@@ -1,3 +1,6 @@
+/** 
+*Copy rights MT Licence
+**/
 var server = require('http').createServer();
 var io = require('socket.io').listen(server);
 var clients = {};
